@@ -17,16 +17,16 @@ CHANNEL = "#qtwebkit"
 # CHANNEL = "#webkit"
 
 PEOPLE = [
-    "Savago",
     "cmarcelo",
     "darktears",
     "hugopl",
     "igoroliveira",
     "jeez_",
     "lmoura",
-    "luck"
+    "luck",
     "rafaelbrandao",
     "setanta",
+    "jprvita",
 
     "bbandix",
     "elproxy",
@@ -37,7 +37,7 @@ PEOPLE = [
     "zalbisser",
 
     "ahf",
-    "kenneth",
+    "kenneth_",
     "laknudse",
     "mibrunin",
     "mulvad",
@@ -45,7 +45,7 @@ PEOPLE = [
 
     "Ossy",
     "Smith",
-    "TwistO"
+    "TwistO",
     "Zoltan",
     "andris88",
     "azbest_hu",
