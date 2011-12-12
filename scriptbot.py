@@ -62,7 +62,7 @@ FROM = "Qt WebKit StatusBot <qtwebkit-statusbot@openbossa.org>"
 TO = "webkit-qt@lists.webkit.org"
 # TO = "caio.oliveira@openbossa.org"
 
-MEETING_TIME_IN_SECONDS = 20 * 60
+MEETING_TIME_IN_SECONDS = 60 * 60
 #MEETING_TIME_IN_SECONDS = 0.5 * 60
 
 class StatusBotClient(irc.IRCClient):
