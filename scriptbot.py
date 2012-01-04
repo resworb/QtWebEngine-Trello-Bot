@@ -31,12 +31,12 @@ PEOPLE = [
     "bbandix",
     "elproxy",
     "jturcotte",
-    "kling",
     "torarne",
     "tronical",
     "zalbisser",
 
     "ahf",
+    "carewolf",
     "kenneth_",
     "laknudse",
     "mibrunin",
