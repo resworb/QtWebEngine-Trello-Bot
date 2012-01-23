@@ -26,7 +26,6 @@ PEOPLE = [
     "luck",
     "rafaelbrandao",
     "setanta",
-    "jprvita",
 
     "bbandix",
     "elproxy",
