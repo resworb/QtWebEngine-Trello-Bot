@@ -52,6 +52,7 @@ PEOPLE = [
     "kkristof",
     "loki04",
     "reni",
+    "stampho",
     "tczene",
     "zherczeg",
     ]
