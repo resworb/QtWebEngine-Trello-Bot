@@ -6,6 +6,7 @@ from twisted.internet import reactor, protocol
 
 import smtplib
 import logging
+import time
 
 NICK = "StatusBot"
 SERVER = "chat.freenode.net"
@@ -43,10 +44,8 @@ PEOPLE = [
     "zalan",
 
     "Ossy",
-    "Smith",
     "TwistO",
     "Zoltan",
-    "andris88",
     "azbest_hu",
     "kbalazs",
     "kkristof",
@@ -62,8 +61,19 @@ FROM = "Qt WebKit StatusBot <qtwebkit-statusbot@openbossa.org>"
 TO = "webkit-qt@lists.webkit.org"
 # TO = "caio.oliveira@openbossa.org"
 
-MEETING_TIME_IN_SECONDS = 60 * 60
-#MEETING_TIME_IN_SECONDS = 0.5 * 60
+MEETING_HOUR = (15, 00)
+MEETING_REMIND_HOUR = (18, 00)
+MEETING_END_TIME = (18, 30)
+
+def offset(hour, minute = 0):
+    nowtime = time.gmtime()
+    nexttime = [item for item in nowtime]
+    if nowtime.tm_hour > hour:
+        nexttime[2] += 1
+    nexttime[3] = hour
+    nexttime[4] = minute
+
+    return int(time.mktime(nexttime) -  time.mktime(nowtime))
 
 class StatusBotClient(irc.IRCClient):
     def _get_nickname(self):
@@ -116,17 +126,18 @@ class StatusBotClient(irc.IRCClient):
             self._send_minutes_mail()
 
         self.factory.ongoing = False
-        self.factory.missing_participants.clear()
+        self.factory.missing_participants = set(self.factory.people)
         self.factory.status_messages.clear()
 
     def _register_status_message(self, nickname, message):
-        if not self.factory.ongoing:
-            return
         logging.warning("Adding status message from '%s': %s" % (nickname, message))
         self.factory.status_messages[nickname] = message
         self.factory.missing_participants.discard(nickname)
         if nickname.endswith('_'):
             self.factory.missing_participants.discard(nickname[:-1])
+
+        if not self.factory.ongoing:
+            self.notice(self.factory.channel, "%s: Status saved. Thanks!"  % (nickname))
 
     def alterCollidedNick(self, nickname):
         logging.warning("Nick Collision")
@@ -136,6 +147,11 @@ class StatusBotClient(irc.IRCClient):
     def signedOn(self):
         logging.warning("Joining Channel: %s" % self.factory.channel)
         self.join(self.factory.channel)
+        self.factory.missing_participants = set(self.factory.people)
+
+        timeleft = offset(*MEETING_HOUR)
+        reactor.callLater(timeleft, self._status_command)
+        logging.warning("Time left till @status start: %d" % (timeleft))
 
     def _status_command(self):
         channel = self.factory.channel
@@ -149,11 +165,10 @@ class StatusBotClient(irc.IRCClient):
         self.notice(channel, "Please type: /me status: <message>")
 
         self.factory.ongoing = True
-        self.factory.missing_participants = set(self.factory.people)
         self.describe(channel, "*pokes* %s" % self._missing_participants_sorted())
 
-        reactor.callLater(MEETING_TIME_IN_SECONDS / 2, self._remind_missing_participants)
-        reactor.callLater(MEETING_TIME_IN_SECONDS, self._end_meeting)
+        reactor.callLater(offset(*MEETING_REMIND_HOUR), self._remind_missing_participants)
+        reactor.callLater(offset(*MEETING_END_TIME), self._end_meeting)
 
     def privmsg(self, user, channel, message):
         if "@status" == message:
