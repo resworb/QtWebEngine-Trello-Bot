@@ -3,10 +3,13 @@
 
 from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
+from datetime import datetime, time
 
+import cPickle as pickle
+import os
 import smtplib
 import logging
-import time
+import time as tmtime
 
 NICK = "StatusBot"
 SERVER = "chat.freenode.net"
@@ -44,14 +47,19 @@ PEOPLE = [
     "zalan",
 
     "Ossy",
-    "TwistO",
     "Zoltan",
+    "abalazs",
     "azbest_hu",
+    "dicska",
+    "kadam",
     "kbalazs",
     "kkristof",
+    "hnandor",
     "loki04",
     "reni",
+    "rtakacs",
     "stampho",
+    "szledan",
     "tczene",
     "zherczeg",
     ]
@@ -66,14 +74,14 @@ MEETING_REMIND_HOUR = (18, 00)
 MEETING_END_TIME = (18, 30)
 
 def offset(hour, minute = 0):
-    nowtime = time.gmtime()
+    nowtime = tmtime.gmtime()
     nexttime = [item for item in nowtime]
-    if nowtime.tm_hour > hour:
+    if nowtime.tm_hour >= hour and nowtime.tm_min >= minute:
         nexttime[2] += 1
     nexttime[3] = hour
     nexttime[4] = minute
 
-    return int(time.mktime(nexttime) -  time.mktime(nowtime))
+    return int(tmtime.mktime(nexttime) -  tmtime.mktime(nowtime))
 
 class StatusBotClient(irc.IRCClient):
     def _get_nickname(self):
@@ -128,6 +136,7 @@ class StatusBotClient(irc.IRCClient):
         self.factory.ongoing = False
         self.factory.missing_participants = set(self.factory.people)
         self.factory.status_messages.clear()
+        self.factory.save()
 
     def _register_status_message(self, nickname, message):
         logging.warning("Adding status message from '%s': %s" % (nickname, message))
@@ -139,6 +148,8 @@ class StatusBotClient(irc.IRCClient):
         if not self.factory.ongoing:
             self.notice(self.factory.channel, "%s: Status saved. Thanks!"  % (nickname))
 
+        self.factory.save();
+
     def alterCollidedNick(self, nickname):
         logging.warning("Nick Collision")
         self.factory.nickname = nickname + '_'
@@ -147,11 +158,12 @@ class StatusBotClient(irc.IRCClient):
     def signedOn(self):
         logging.warning("Joining Channel: %s" % self.factory.channel)
         self.join(self.factory.channel)
-        self.factory.missing_participants = set(self.factory.people)
 
         timeleft = offset(*MEETING_HOUR)
         reactor.callLater(timeleft, self._status_command)
         logging.warning("Time left till @status start: %d" % (timeleft))
+        reactor.callLater(offset(*MEETING_REMIND_HOUR), self._remind_missing_participants)
+        reactor.callLater(offset(*MEETING_END_TIME), self._end_meeting)
 
     def _status_command(self):
         channel = self.factory.channel
@@ -167,9 +179,6 @@ class StatusBotClient(irc.IRCClient):
         self.factory.ongoing = True
         self.describe(channel, "*pokes* %s" % self._missing_participants_sorted())
 
-        reactor.callLater(offset(*MEETING_REMIND_HOUR), self._remind_missing_participants)
-        reactor.callLater(offset(*MEETING_END_TIME), self._end_meeting)
-
     def privmsg(self, user, channel, message):
         if "@status" == message:
             self._status_command()
@@ -184,6 +193,7 @@ class StatusBotClient(irc.IRCClient):
 
 class StatusBotClientFactory(protocol.ClientFactory):
     protocol = StatusBotClient
+    filename = "status.data"
 
     def __init__(self, nickname, channel, people):
         self.nickname = nickname
@@ -194,6 +204,7 @@ class StatusBotClientFactory(protocol.ClientFactory):
         self.missing_participants = set()
         self.status_messages = {}
         self.ongoing = False
+        self.load()
 
     def clientConnectionLost(self, connector, reason):
         logging.warning("Connection Lost: %s" % reason)
@@ -202,6 +213,26 @@ class StatusBotClientFactory(protocol.ClientFactory):
     def clientConnectionFailed(self, connector, reason):
         logging.warning("Connection Lost: %s" % reason)
         reactor.callLater(600, connector.connect)
+
+    def save(self):
+        f = open(self.filename, 'wb')
+        pickle.dump(self.status_messages, f)
+        f.close()
+
+    def load(self):
+        if os.path.exists(self.filename):
+            f =  open(self.filename, 'rb')
+            try:
+                self.status_messages = pickle.load(f)
+            except:
+                pass
+            f.close()
+
+        timenow = datetime.utcnow().time()
+        if time(*MEETING_HOUR) <= timenow and timenow < time(*MEETING_END_TIME):
+            self.ongoing = True
+        self.missing_participants = set(PEOPLE) - set(self.status_messages.keys())
+
 
 if "__main__" == __name__:
     bot = StatusBotClientFactory(NICK, CHANNEL, PEOPLE)
