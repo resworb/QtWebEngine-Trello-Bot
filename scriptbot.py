@@ -38,12 +38,8 @@ PEOPLE = [
     "tronical",
     "zalbisser",
 
-    "ahf",
     "carewolf",
-    "kenneth_",
-    "laknudse",
     "mibrunin",
-    "mulvad",
     "zalan",
 
     "Ossy",
