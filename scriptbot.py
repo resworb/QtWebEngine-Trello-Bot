@@ -23,13 +23,7 @@ CHANNEL = "#qtwebkit"
 PEOPLE = [
     "cmarcelo",
     "darktears",
-    "hugopl",
-    "igoroliveira",
     "jeez_",
-    "lmoura",
-    "luck",
-    "rafaelbrandao",
-    "setanta",
 
     "bbandix",
     "elproxy",
