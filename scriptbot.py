@@ -22,7 +22,6 @@ CHANNEL = "#qtwebkit"
 
 PEOPLE = [
     "cmarcelo",
-    "darktears",
     "jeez_",
 
     "bbandix",
