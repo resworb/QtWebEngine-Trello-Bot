@@ -33,7 +33,6 @@ PEOPLE = [
 
     "carewolf",
     "mibrunin",
-    "zalan",
 
     "Ossy",
     "Zoltan",
