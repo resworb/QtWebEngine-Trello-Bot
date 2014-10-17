@@ -27,7 +27,10 @@ def parse_trello_date(str_date):
 def friday_meeting_delta():
     MEETING_HOUR = (15, 00)
     today = datetime.today()
-    friday = today + timedelta( (4-today.weekday()) % 7 )
+    days_ahead = 4 - today.weekday()
+    if days_ahead <= 0:
+        days_ahead += 7
+    friday = today + timedelta(days_ahead)
     friday_meeting = datetime.combine(friday, time(*MEETING_HOUR))
     return friday_meeting - datetime.now()
 
