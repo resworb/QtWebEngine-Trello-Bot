@@ -26,12 +26,15 @@ def parse_trello_date(str_date):
 
 def friday_meeting_delta():
     MEETING_HOUR = (15, 00)
+    meeting_time = time(*MEETING_HOUR)
     today = datetime.today()
     days_ahead = 4 - today.weekday()
-    if days_ahead <= 0:
+    is_after_meeting = today.hour > meeting_time.hour or \
+                       (today.hour == meeting_time.hour and today.minute >= meeting_time.minute)
+    if days_ahead < 0 or (days_ahead == 0 and is_after_meeting):
         days_ahead += 7
     friday = today + timedelta(days_ahead)
-    friday_meeting = datetime.combine(friday, time(*MEETING_HOUR))
+    friday_meeting = datetime.combine(friday, meeting_time)
     return friday_meeting - datetime.now()
 
 def fetch_card_shorturl(trello, card_id):
